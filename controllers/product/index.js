@@ -30,7 +30,7 @@ const products = async (req, res) => {
 };
 const create = async (req, res) => {
   try {
-    const { name, image, purchasePrice, salesPrice, stock } = req.body;
+    const { name, purchasePrice, salesPrice, stock } = req.body;
 
     const productExists = await Product.exists({ name });
     if (productExists) {
@@ -39,23 +39,34 @@ const create = async (req, res) => {
       });
     }
 
-    const product = Product.create({
-      name,
-      image,
-      purchasePrice,
-      salesPrice,
-      stock,
-    });
+    let uploadFile = req.files.image;
+    const imageName = uploadFile.name;
+    const saveAs = `  ${imageName}`;
 
-    res.status(201).json({
-      product: {
-        _id: product._id,
+    const pathImage = `assets/images/${saveAs}`;
+
+    uploadFile.mv(pathImage, function (err) {
+      if (err) {
+        return res.status(500).send(err);
+      }
+      const product = Product.create({
         name,
-        image,
+        image: pathImage,
         purchasePrice,
         salesPrice,
         stock,
-      },
+      });
+
+      res.status(201).json({
+        product: {
+          _id: product._id,
+          name,
+          image,
+          purchasePrice,
+          salesPrice,
+          stock,
+        },
+      });
     });
   } catch (error) {
     return res.status(500).send("Error :", error.message);

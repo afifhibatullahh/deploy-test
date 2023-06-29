@@ -6,10 +6,10 @@ const productControllers = require("../controllers/product");
 const validator = require("express-joi-validation").createValidator({});
 const auth = require("../middleware/auth");
 const paginationMiddleware = require("../middleware/pagination");
+const validationImage = require("../middleware/image");
 
 const productSchema = Joi.object({
   name: Joi.string().required().label("Nama barang"),
-  image: Joi.string().required().label("Gambar"),
   salesPrice: Joi.number().required().label("Harga jual"),
   purchasePrice: Joi.number().required().label("Harga beli"),
   stock: Joi.number().required().label("Stok"),
@@ -17,6 +17,7 @@ const productSchema = Joi.object({
 
 router.post(
   "/",
+  // validationImage,
   auth,
   validator.body(productSchema),
   productControllers.create
