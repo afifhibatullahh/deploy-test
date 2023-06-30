@@ -17,8 +17,8 @@ const productSchema = Joi.object({
 
 router.post(
   "/",
-  // validationImage,
   auth,
+  validationImage,
   validator.body(productSchema),
   productControllers.create
 );
@@ -27,7 +27,7 @@ router.get("/", paginationMiddleware(10), auth, productControllers.products);
 
 router.get("/:id", auth, productControllers.read);
 
-router.put("/:id", auth, productControllers.update);
+router.put("/:id", auth, validationImage, productControllers.update);
 
 router.delete("/:id", auth, productControllers.destroy);
 

@@ -1,4 +1,7 @@
 const Product = require("../../models/product");
+const path = require("path");
+
+const ___DIRNAME = path.resolve().replace(/\\/g, "/");
 
 const products = async (req, res) => {
   try {
@@ -28,28 +31,28 @@ const products = async (req, res) => {
     return res.status(500).send(error.message);
   }
 };
+
 const create = async (req, res) => {
   try {
     const { name, purchasePrice, salesPrice, stock } = req.body;
 
     const productExists = await Product.exists({ name });
     if (productExists) {
-      return res.status(409).send({
+      return res.status(409).json({
         message: "Barang sudah dibuat",
       });
     }
 
     let uploadFile = req.files.image;
-    const imageName = uploadFile.name;
-    const saveAs = `  ${imageName}`;
+    const imageName = Date.now() + "_" + uploadFile.name;
 
-    const pathImage = `assets/images/${saveAs}`;
+    const pathImage = path.join(___DIRNAME, `uploads/images/${imageName}`);
 
-    uploadFile.mv(pathImage, function (err) {
+    await uploadFile.mv(pathImage, async function (err) {
       if (err) {
-        return res.status(500).send(err);
+        return res.status(500).json(err);
       }
-      const product = Product.create({
+      const product = await Product.create({
         name,
         image: pathImage,
         purchasePrice,
@@ -59,9 +62,9 @@ const create = async (req, res) => {
 
       res.status(201).json({
         product: {
-          _id: product._id,
+          productId: product._id,
           name,
-          image,
+          image: pathImage,
           purchasePrice,
           salesPrice,
           stock,
@@ -69,7 +72,7 @@ const create = async (req, res) => {
       });
     });
   } catch (error) {
-    return res.status(500).send("Error :", error.message);
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -77,7 +80,7 @@ const read = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).exec();
     if (!product) {
-      return res.status(409).send({
+      return res.status(409).json({
         message: "Produk tidak ditemukan",
       });
     }
@@ -87,27 +90,46 @@ const read = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).send(error.message);
+    return res.status(500).json(error.message);
   }
 };
 
 const update = async (req, res) => {
   try {
     const id = req.params.id;
+    const { name, purchasePrice, salesPrice, stock } = req.body;
     const productExists = await Product.findOne({
-      name: req.body.name,
+      name: name,
       _id: { $ne: id },
     });
     if (productExists) {
       return res.status(400).json({ error: "Nama produk sudah terpakai" });
     }
-    const product = await Product.findByIdAndUpdate(id, req.body);
-    res.status(201).json({
-      product,
-      message: "product updated",
+
+    let uploadFile = req.files.image;
+    const imageName = Date.now() + "_" + uploadFile.name;
+
+    const pathImage = path.join(___DIRNAME, `uploads/images/${imageName}`);
+    await uploadFile.mv(pathImage, async function (err) {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      const product = await Product.findByIdAndUpdate(id, {
+        name,
+        image: pathImage,
+        purchasePrice,
+        salesPrice,
+        stock,
+      });
+
+      res.status(201).json({
+        product,
+        message: "Product updated",
+      });
     });
   } catch (error) {
-    return res.status(500).send(error.message);
+    return res.status(500).json(error.message);
   }
 };
 
@@ -119,7 +141,7 @@ const destroy = async (req, res) => {
       message: "product deleted",
     });
   } catch (error) {
-    return res.status(500).send(error.message);
+    return res.status(500).json(error.message);
   }
 };
 
