@@ -3,6 +3,8 @@ const path = require("path");
 
 const ___DIRNAME = path.resolve().replace(/\\/g, "/");
 
+const config = process.env;
+
 const products = async (req, res) => {
   try {
     const { startIndex, page } = req.pagination;
@@ -52,9 +54,11 @@ const create = async (req, res) => {
       if (err) {
         return res.status(500).json(err);
       }
+
+      const imageSave = `${config.URL}/images/${imageName}`;
       const product = await Product.create({
         name,
-        image: pathImage,
+        image: imageSave,
         purchasePrice,
         salesPrice,
         stock,
@@ -64,7 +68,7 @@ const create = async (req, res) => {
         product: {
           productId: product._id,
           name,
-          image: pathImage,
+          image: imageSave,
           purchasePrice,
           salesPrice,
           stock,
@@ -115,9 +119,10 @@ const update = async (req, res) => {
         return res.status(500).json(err);
       }
 
+      const imageSave = `${config.URL}/images/${imageName}`;
       const product = await Product.findByIdAndUpdate(id, {
         name,
-        image: pathImage,
+        image: imageSave,
         purchasePrice,
         salesPrice,
         stock,
